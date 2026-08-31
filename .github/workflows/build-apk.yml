@@ -1,0 +1,97 @@
+name: Build Android APK (DevQR)
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build Type (debug / release)'
+        required: true
+        default: 'debug'
+        type: choice
+        options:
+          - debug
+          - release
+
+jobs:
+  build-apk:
+    name: Build Android APK on GitHub Servers
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ☕ Set up Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: 🤖 Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 🟢 Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: 📦 Install Mobile Dependencies
+        working-directory: mobile
+        run: |
+          npm install
+
+      - name: 🔨 Generate Native Android Project (Expo Prebuild)
+        working-directory: mobile
+        run: |
+          npx expo prebuild --platform android --clean
+
+      - name: 🏗️ Build Android APK (${{ github.event.inputs.build_type || 'debug' }})
+        working-directory: mobile/android
+        run: |
+          chmod +x gradlew
+          if [ "${{ github.event.inputs.build_type }}" = "release" ]; then
+            ./gradlew assembleRelease --no-daemon
+          else
+            ./gradlew assembleDebug --no-daemon
+          fi
+
+      - name: 🔍 Locate Generated APK
+        id: find_apk
+        run: |
+          APK_PATH=$(find mobile/android/app/build/outputs/apk/ -name "*.apk" | head -n 1)
+          echo "Found APK at: $APK_PATH"
+          echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
+
+      - name: 📤 Upload APK Artifact to GitHub Actions
+        uses: actions/upload-artifact@v4
+        with:
+          name: DevQR-Android-APK
+          path: ${{ steps.find_apk.outputs.apk_path }}
+          retention-days: 14
+
+      - name: 🚀 Publish GitHub Release (Optional on tag/dispatch)
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0-apk-${{ github.run_number }}
+          name: DevQR Android APK (v1.0.${{ github.run_number }})
+          body: |
+            ## 📱 DevQR Mobile Android APK
+            
+            - Built with native C++ and on-device offline LLM support (`llama.rn` + GGUF).
+            - Real-time LAN terminal multiplexer & bridge.
+            - 1-Click offline bug repair and AI app scaffold.
+            
+            ### ⬇️ Download & Installation:
+            1. Download the attached `.apk` file directly on your Android phone.
+            2. Tap to install (enable "Install from Unknown Sources" if prompted).
+            3. Enjoy DevQR with full native performance!
+          files: ${{ steps.find_apk.outputs.apk_path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

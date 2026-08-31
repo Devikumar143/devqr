@@ -1,0 +1,14 @@
+{
+  "name": "devqr-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DevQR — Laptop Errors. Phone Intelligence. (CLI + React Native Expo Mobile App)",
+  "scripts": {
+    "devqr": "npm --prefix cli start",
+    "dev:cli": "npm --prefix cli run dev",
+    "build:cli": "npm --prefix cli run build",
+    "start": "npm --prefix mobile start",
+    "android": "npm --prefix mobile run android",
+    "ios": "npm --prefix mobile run ios"
+  }
+}

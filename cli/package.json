@@ -1,0 +1,43 @@
+{
+  "name": "devqr-cli",
+  "version": "1.0.0",
+  "description": "DevQR CLI - Laptop Errors. Phone Intelligence. No Cloud Backend Required.",
+  "main": "dist/index.js",
+  "bin": {
+    "devqr": "./dist/index.js"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "devqr",
+    "cli",
+    "debugging",
+    "ai",
+    "qr",
+    "developer-tool"
+  ],
+  "author": "DevQR Team",
+  "license": "MIT",
+  "dependencies": {
+    "@inquirer/prompts": "^8.7.0",
+    "@types/qrcode": "^1.5.6",
+    "@types/ws": "^8.18.1",
+    "commander": "^13.1.0",
+    "pako": "^2.1.0",
+    "picocolors": "^1.1.1",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0",
+    "ws": "^8.21.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.1",
+    "@types/pako": "^2.0.3",
+    "@types/qrcode-terminal": "^0.12.2",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3"
+  }
+}
