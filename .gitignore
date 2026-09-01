@@ -9,3 +9,5 @@ npm-debug.*
 models/
 android/
 ios/
+~$*
+guide_styled.html

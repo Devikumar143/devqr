@@ -10,5 +10,8 @@
     "start": "npm --prefix mobile start",
     "android": "npm --prefix mobile run android",
     "ios": "npm --prefix mobile run ios"
+  },
+  "devDependencies": {
+    "marked": "^18.0.11"
   }
 }
