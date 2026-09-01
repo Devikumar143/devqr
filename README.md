@@ -3,6 +3,8 @@
 > **Turn any laptop error into a portable debugging session on your phone.**  
 > *No DevQR cloud backend. Your debugging session belongs to you.*
 
+📖 **[Read the Full Technical Documentation & Architecture Guide (DOCUMENTATION.md)](./DOCUMENTATION.md)**
+
 ---
 
 ## Architecture Overview
