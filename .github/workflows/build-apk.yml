@@ -8,13 +8,13 @@ on:
   workflow_dispatch:
     inputs:
       build_type:
-        description: 'Build Type (debug / release)'
+        description: 'Build Type (release / debug)'
         required: true
-        default: 'debug'
+        default: 'release'
         type: choice
         options:
-          - debug
           - release
+          - debug
 
 jobs:
   build-apk:
@@ -51,14 +51,14 @@ jobs:
         run: |
           npx expo prebuild --platform android --clean
 
-      - name: 🏗️ Build Android APK (${{ github.event.inputs.build_type || 'debug' }})
+      - name: 🏗️ Build Android APK (${{ github.event.inputs.build_type || 'release' }})
         working-directory: mobile/android
         run: |
           chmod +x gradlew
-          if [ "${{ github.event.inputs.build_type }}" = "release" ]; then
-            ./gradlew assembleRelease --no-daemon
-          else
+          if [ "${{ github.event.inputs.build_type }}" = "debug" ]; then
             ./gradlew assembleDebug --no-daemon
+          else
+            ./gradlew assembleRelease --no-daemon
           fi
 
       - name: 🔍 Locate Generated APK
