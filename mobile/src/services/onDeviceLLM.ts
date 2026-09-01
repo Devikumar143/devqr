@@ -256,27 +256,15 @@ export class OnDeviceLLMService {
         } else if (isPalindrome || isReverse) {
           code = `#include <stdio.h>\n#include <string.h>\n\nint main(void) {\n    char str[100];\n    printf("Enter a string: ");\n    if (scanf("%99s", str) != 1) return 1;\n    int l = 0, h = strlen(str) - 1, isPal = 1;\n    while (h > l) {\n        if (str[l++] != str[h--]) { isPal = 0; break; }\n    }\n    if (isPal) printf("%s is a palindrome!\\n", str);\n    else printf("%s is NOT a palindrome.\\n", str);\n    return 0;\n}`;
         }
-        return JSON.stringify({
-          filePath: "main.c",
-          content: code,
-          explanation: "Synthesized C program on-device."
-        });
+        return code;
       }
 
       if (isGo) {
-        return JSON.stringify({
-          filePath: "main.go",
-          content: `package main\n\nimport (\n\t"fmt"\n)\n\nfunc main() {\n\tfmt.Println("=========================================")\n\tfmt.Println("  🐹 DevQR Go Engine")\n\tfmt.Println("=========================================")\n\tfmt.Println("✓ Generated on smartphone.")\n}`,
-          explanation: "Synthesized standalone Go application on-device."
-        });
+        return `package main\n\nimport (\n\t"fmt"\n)\n\nfunc main() {\n\tfmt.Println("=========================================")\n\tfmt.Println("  🐹 DevQR Go Engine")\n\tfmt.Println("=========================================")\n\tfmt.Println("✓ Generated on smartphone.")\n}`;
       }
 
       if (isRust) {
-        return JSON.stringify({
-          filePath: "main.rs",
-          content: `fn main() {\n    println!("=========================================");\n    println!("  🦀 DevQR Rust Engine");\n    println!("=========================================");\n    println!("✓ Memory safe code generated on mobile.");\n}`,
-          explanation: "Synthesized standalone Rust application on-device."
-        });
+        return `fn main() {\n    println!("=========================================");\n    println!("  🦀 DevQR Rust Engine");\n    println!("=========================================");\n    println!("✓ Memory safe code generated on mobile.");\n}`;
       }
 
       // Python generators
@@ -289,11 +277,7 @@ export class OnDeviceLLMService {
         pyCode = `def fibonacci(n: int):\n    a, b = 0, 1\n    result = []\n    for _ in range(n):\n        result.append(a)\n        a, b = b, a + b\n    return result\n\ndef main():\n    n = int(input("How many Fibonacci numbers? ") or "10")\n    print(f"First {n} Fibonacci numbers: {fibonacci(n)}")\n\nif __name__ == "__main__":\n    main()`;
       }
 
-      return JSON.stringify({
-        filePath: "app.py",
-        content: pyCode,
-        explanation: "Synthesized Python application on-device."
-      });
+      return pyCode;
     }
   }
 

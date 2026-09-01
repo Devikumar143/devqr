@@ -1530,7 +1530,11 @@ Generate the clean code solution.`;
         }
 
         if (rawResponse) {
-          // 1. Try JSON parsing
+          let extractedContent = '';
+          let extractedFilePath = cleanTarget;
+          let extractedExplanation = 'Synthesized complete production application code.';
+
+          // 1. Try standard JSON parse
           try {
             let clean = rawResponse.trim();
             if (clean.startsWith('```json')) {
@@ -1540,34 +1544,66 @@ Generate the clean code solution.`;
             }
             const parsed = JSON.parse(clean);
             if (parsed && parsed.content && typeof parsed.content === 'string' && parsed.content.trim()) {
-              return {
-                filePath: parsed.filePath || cleanTarget,
-                content: parsed.content.trim(),
-                explanation: parsed.explanation || 'Synthesized complete production application code.',
-                language,
-                providerUsed: modelUsed
-              };
+              extractedContent = parsed.content.trim();
+              if (parsed.filePath) extractedFilePath = parsed.filePath;
+              if (parsed.explanation) extractedExplanation = parsed.explanation;
             }
           } catch {}
 
-          // 2. Try markdown extraction (```lang\n...```)
-          const codeBlock = rawResponse.match(/```(?:[a-zA-Z0-9_-]+)?\s*\n([\s\S]*?)\n```/);
-          if (codeBlock && codeBlock[1] && codeBlock[1].trim()) {
-            return {
-              filePath: cleanTarget,
-              content: codeBlock[1].trim(),
-              explanation: 'Synthesized complete production application code.',
-              language,
-              providerUsed: modelUsed
-            };
+          // 2. Try regex extraction of JSON fields if JSON.parse failed due to bad escaping
+          if (!extractedContent && (rawResponse.includes('"content"') || rawResponse.includes('"filePath"'))) {
+            try {
+              const fileMatch = rawResponse.match(/"filePath"\s*:\s*"([^"]+)"/);
+              if (fileMatch && fileMatch[1]) extractedFilePath = fileMatch[1];
+
+              const expMatch = rawResponse.match(/"explanation"\s*:\s*"([^"]+)"/);
+              if (expMatch && expMatch[1]) extractedExplanation = expMatch[1];
+
+              const contentMatch = rawResponse.match(/"content"\s*:\s*"([\s\S]*?)"\s*,\s*"explanation"/s) ||
+                                   rawResponse.match(/"content"\s*:\s*"([\s\S]*?)"\s*}/s) ||
+                                   rawResponse.match(/"content"\s*:\s*`([\s\S]*?)`\s*}/s);
+              
+              if (contentMatch && contentMatch[1]) {
+                extractedContent = contentMatch[1]
+                  .replace(/\\n/g, '\n')
+                  .replace(/\\"/g, '"')
+                  .replace(/\\t/g, '\t')
+                  .replace(/\\\\/g, '\\')
+                  .trim();
+              }
+            } catch {}
           }
 
-          // 3. Try raw code extraction if code keywords are present
-          if (rawResponse.includes('def ') || rawResponse.includes('import ') || rawResponse.includes('function ') || rawResponse.includes('class ') || rawResponse.includes('package ')) {
+          // 3. Try markdown code block extraction (```lang\n...\n```)
+          if (!extractedContent) {
+            const codeBlock = rawResponse.match(/```(?:[a-zA-Z0-9_-]+)?\s*\n([\s\S]*?)\n```/);
+            if (codeBlock && codeBlock[1] && codeBlock[1].trim()) {
+              extractedContent = codeBlock[1].trim();
+            }
+          }
+
+          // 4. If raw string still has JSON formatting artifacts, strip them cleanly
+          if (!extractedContent) {
+            let sanitized = rawResponse.trim();
+            sanitized = sanitized.replace(/^\{\s*"filePath"\s*:\s*"[^"]*",\s*"content"\s*:\s*"?/is, '');
+            sanitized = sanitized.replace(/"\s*,\s*"explanation"\s*:\s*"[\s\S]*?"\s*\}$/is, '');
+            sanitized = sanitized.replace(/\s*\}\s*$/s, '');
+            if (sanitized.includes('def ') || sanitized.includes('import ') || sanitized.includes('function ') || sanitized.includes('class ') || sanitized.includes('package ') || sanitized.includes('const ') || sanitized.includes('let ')) {
+              extractedContent = sanitized.trim();
+            }
+          }
+
+          if (extractedContent) {
+            // Final safety filter: remove any lingering JSON wrapper tags
+            extractedContent = extractedContent
+              .replace(/^\{\s*"filePath"[\s\S]*?"content"\s*:\s*"?/is, '')
+              .replace(/"\s*,\s*"explanation"[\s\S]*$/is, '')
+              .trim();
+
             return {
-              filePath: cleanTarget,
-              content: rawResponse.trim(),
-              explanation: 'Synthesized complete production application code.',
+              filePath: extractedFilePath || cleanTarget,
+              content: extractedContent,
+              explanation: extractedExplanation,
               language,
               providerUsed: modelUsed
             };
