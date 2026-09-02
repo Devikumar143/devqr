@@ -53,6 +53,8 @@ jobs:
 
       - name: 🏗️ Build Android APK (${{ github.event.inputs.build_type || 'release' }})
         working-directory: mobile/android
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs='-Xmx4096m -XX:MaxMetaspaceSize=1024m'"
         run: |
           chmod +x gradlew
           if [ "${{ github.event.inputs.build_type }}" = "debug" ]; then
@@ -60,6 +62,7 @@ jobs:
           else
             ./gradlew assembleRelease --no-daemon
           fi
+
 
       - name: 🔍 Locate Generated APK
         id: find_apk

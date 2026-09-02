@@ -4,10 +4,11 @@ const { getDefaultConfig } = require('expo/metro-config');
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(__dirname);
 
-// Exclude native Android build output artifacts from Metro's file watcher on Windows
+// Exclude native Android build output artifacts from Metro's file watcher
 config.resolver.blockList = [
   /.*\/android\/app\/build\/.*/,
-  /.*\/node_modules\/.*\/build\/.*/,
+  /.*\/android\/build\/.*/,
 ];
 
 module.exports = config;
+
