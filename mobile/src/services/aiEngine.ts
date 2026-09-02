@@ -1620,14 +1620,139 @@ Generate the clean code solution.`;
 
     // Intelligent Offline Code Synthesizers (Full Working Applications)
     const lowerPrompt = prompt.toLowerCase();
+    const isHangman = lowerPrompt.includes('hangman') || lowerPrompt.includes('word guess');
     const isGuessingGame = lowerPrompt.includes('guess') || lowerPrompt.includes('number');
     const isSnake = lowerPrompt.includes('snake');
     const isTodo = lowerPrompt.includes('todo') || lowerPrompt.includes('task');
     const isApi = lowerPrompt.includes('fastapi') || lowerPrompt.includes('api') || lowerPrompt.includes('rest');
-    const isCalc = lowerPrompt.includes('calc') || lowerPrompt.includes('calculator');
+    const isCalc = /\b(calc|calculator|sum|arithmetic)\b/.test(lowerPrompt);
 
     if (isPython) {
-      if (isGuessingGame) {
+      if (isHangman) {
+        const hangmanCode = `"""
+${cleanTarget} - Interactive Hangman Game
+Created with DevQR AI Studio
+"""
+import random
+import sys
+
+WORDS = ["PYTHON", "TERMINAL", "OFFLINE", "DEVELOPER", "ALGORITHM", "VARIABLE", "FUNCTION"]
+STAGES = [
+    """
+  +---+
+  |   |
+      |
+      |
+      |
+      |
+=========""",
+    """
+  +---+
+  |   |
+  O   |
+      |
+      |
+      |
+=========""",
+    """
+  +---+
+  |   |
+  O   |
+  |   |
+      |
+      |
+=========""",
+    """
+  +---+
+  |   |
+  O   |
+ /|   |
+      |
+      |
+=========""",
+    """
+  +---+
+  |   |
+  O   |
+ /|\\\\  |
+      |
+      |
+=========""",
+    """
+  +---+
+  |   |
+  O   |
+ /|\\\\  |
+ /    |
+      |
+=========""",
+    """
+  +---+
+  |   |
+  O   |
+ /|\\\\  |
+ / \\\\  |
+      |
+========="""
+]
+
+def play():
+    word = random.choice(WORDS)
+    guessed = set()
+    missed = set()
+    max_misses = len(STAGES) - 1
+
+    print("=" * 50)
+    print("        🎯 INTERACTIVE HANGMAN GAME 🎯")
+    print("=" * 50)
+
+    while len(missed) < max_misses:
+        print(STAGES[len(missed)])
+        print(f"Missed Letters: {' '.join(sorted(missed)) or 'None'}")
+        
+        display = [c if c in guessed else '_' for c in word]
+        print(f"\\nWord: {' '.join(display)}\\n")
+
+        if '_' not in display:
+            print("🎉 BINGO! You correctly guessed the word:", word)
+            return
+
+        try:
+            guess = input("Guess a letter: ").strip().upper()
+        except (EOFError, KeyboardInterrupt):
+            print(f"\\nGame ended. The word was: {word}")
+            return
+
+        if len(guess) != 1 or not guess.isalpha():
+            print("❌ Please enter a single letter (A-Z).")
+            continue
+
+        if guess in guessed or guess in missed:
+            print("⚠️ You already guessed that letter!")
+            continue
+
+        if guess in word:
+            guessed.add(guess)
+            print(f"✓ Good guess! '{guess}' is in the word.")
+        else:
+            missed.add(guess)
+            print(f"❌ '{guess}' is NOT in the word.")
+
+    print(STAGES[len(missed)])
+    print("💀 GAME OVER! You ran out of attempts.")
+    print(f"The secret word was: {word}")
+
+if __name__ == "__main__":
+    play()
+`;
+        return {
+          filePath: cleanTarget,
+          content: hangmanCode,
+          explanation: 'Generated complete interactive Hangman game in Python with ASCII graphics and state tracking.',
+          language: 'python',
+          providerUsed: 'DevQR Game Synthesizer'
+        };
+      } else if (isGuessingGame) {
         const gameCode = `"""
 ${cleanTarget} - Interactive Number Guessing Game
 Created with DevQR AI Studio
