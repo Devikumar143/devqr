@@ -165,33 +165,52 @@ export class OnDeviceLLMService {
   public async getLlamaEngine(): Promise<any> {
     if (this.llamaContext) return this.llamaContext;
 
-    // Check if running inside Expo Go sandbox (native JSI C++ unavailable)
+    // Check if running inside environment where native llama.rn binary is available
     try {
-      const { NativeModules } = require('react-native');
-      if (!NativeModules.RNLlamaContext && !NativeModules.LlamaContext) {
-        return null; // Gracefully signal Expo Go environment
+      const { NativeModules, TurboModuleRegistry } = require('react-native');
+      const hasRNLlama =
+        (typeof global !== 'undefined' && typeof (global as any).llamaInitContext === 'function') ||
+        TurboModuleRegistry?.get?.('RNLlama') ||
+        NativeModules?.RNLlama;
+
+      if (!hasRNLlama) {
+        console.warn('[OnDeviceLLM] RNLlama native C++ module not found in runtime.');
+        return null; // Gracefully signal non-native environment (e.g. Expo Go)
       }
-    } catch {}
+    } catch (checkErr) {
+      console.warn('[OnDeviceLLM] Native module check failed:', checkErr);
+    }
 
     const status = await this.isModelDownloaded();
     if (!status.isDownloaded) {
+      console.warn('[OnDeviceLLM] Model is not downloaded yet.');
       return null;
     }
 
     try {
       const llamaRn = require('llama.rn');
       const initLlama = llamaRn.initLlama || llamaRn.default?.initLlama;
-      if (!initLlama) return null;
+      if (!initLlama) {
+        console.warn('[OnDeviceLLM] initLlama export not found in llama.rn.');
+        return null;
+      }
 
+      let modelPath = this.getModelPath();
+      if (modelPath.startsWith('file://')) {
+        modelPath = modelPath.replace(/^file:\/\//, '');
+      }
+
+      console.log('[OnDeviceLLM] Initializing Llama context with model:', modelPath);
       this.llamaContext = await initLlama({
-        model: this.getModelPath(),
-        use_mlock: true,
+        model: modelPath,
+        use_mlock: false, // Essential for Android (mlock fails on non-rooted Android OS)
         n_ctx: 2048,
-        n_gpu_layers: 99 // Offload layers to mobile GPU / Metal / Vulkan
+        n_gpu_layers: 0 // Safe default across all mobile GPUs/CPUs
       });
 
       return this.llamaContext;
-    } catch {
+    } catch (err: any) {
+      console.error('[OnDeviceLLM] Failed to initialize native llama context:', err);
       return null;
     }
   }

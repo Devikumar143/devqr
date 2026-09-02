@@ -34,7 +34,8 @@
         {
           "cameraPermission": "Allow DevQR to access your camera to scan debugging QR codes."
         }
-      ]
+      ],
+      "llama.rn"
     ],
     "scheme": "devqr",
     "extra": {
